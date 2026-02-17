@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import MainLayout from './components/Layout/MainLayout';
+import PermissionGuard from './components/PermissionGuard';
 import LoginPage from './pages/LoginPage';
 import POSPage from './pages/POSPage';
 import ProductsPage from './pages/ProductsPage';
@@ -36,13 +37,27 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="/pos" replace />} />
-          <Route path="pos" element={<POSPage />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
+
+          {/* 所有登入者可用 */}
+          <Route path="pos"       element={<POSPage />} />
+          <Route path="orders"    element={<OrdersPage />} />
           <Route path="inventory" element={<InventoryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="users" element={<UsersPage />} />
+
+          {/* 需要 MANAGER 以上 */}
+          <Route path="products"   element={
+            <PermissionGuard requiredRole="MANAGER"><ProductsPage /></PermissionGuard>
+          } />
+          <Route path="categories" element={
+            <PermissionGuard requiredRole="MANAGER"><CategoriesPage /></PermissionGuard>
+          } />
+          <Route path="reports"    element={
+            <PermissionGuard requiredRole="MANAGER"><ReportsPage /></PermissionGuard>
+          } />
+
+          {/* 需要 ADMIN */}
+          <Route path="users" element={
+            <PermissionGuard requiredRole="ADMIN"><UsersPage /></PermissionGuard>
+          } />
         </Route>
       </Routes>
     </BrowserRouter>
