@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// 使用者 & 認證
+// =====================
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(CASHIER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+// =====================
+// 商品分類
+// =====================
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String    @default("#1890ff")
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+// =====================
+// 商品
+// =====================
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  barcode     String?  @unique
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  cost        Decimal  @db.Decimal(10, 2) @default(0)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  inventory    Inventory?
+  orderItems   OrderItem[]
+
+  @@map("products")
+}
+
+// =====================
+// 庫存
+// =====================
+model Inventory {
+  id             String   @id @default(cuid())
+  quantity       Int      @default(0)
+  minQuantity    Int      @default(5)  // 低庫存警戒線
+  updatedAt      DateTime @updatedAt
+
+  productId      String   @unique
+  product        Product  @relation(fields: [productId], references: [id])
+
+  movements      InventoryMovement[]
+
+  @@map("inventories")
+}
+
+model InventoryMovement {
+  id          String        @id @default(cuid())
+  type        MovementType
+  quantity    Int
+  note        String?
+  createdAt   DateTime      @default(now())
+
+  inventoryId String
+  inventory   Inventory     @relation(fields: [inventoryId], references: [id])
+
+  @@map("inventory_movements")
+}
+
+enum MovementType {
+  IN           // 進貨
+  OUT          // 出貨 (銷售)
+  ADJUSTMENT   // 手動調整
+  RETURN       // 退貨
+}
+
+// =====================
+// 訂單
+// =====================
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal    @db.Decimal(10, 2) @default(0)
+  taxAmount     Decimal     @db.Decimal(10, 2) @default(0)
+  total         Decimal     @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  note          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  cashierId     String
+  cashier       User        @relation(fields: [cashierId], references: [id])
+
+  items         OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  LINE_PAY
+  OTHER
+}
