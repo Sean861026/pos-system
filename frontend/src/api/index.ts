@@ -58,6 +58,7 @@ export const orderApi = {
       discountAmount,
       note,
     }),
+  refund: (id: string) => apiClient.post(`/orders/${id}/refund`),
 };
 
 // =====================
@@ -69,6 +70,18 @@ export const inventoryApi = {
   getMovements: (productId: string) => apiClient.get(`/inventory/${productId}/movements`),
   adjust: (productId: string, quantity: number, note?: string) =>
     apiClient.post(`/inventory/${productId}/adjust`, { quantity, note }),
+};
+
+// =====================
+// 使用者管理
+// =====================
+export const userApi = {
+  getAll: () => apiClient.get('/users'),
+  create: (data: { name: string; email: string; password: string; role: string }) =>
+    apiClient.post('/users', data),
+  update: (id: string, data: Partial<{ name: string; email: string; role: string; isActive: boolean; password: string }>) =>
+    apiClient.put(`/users/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/users/${id}`),
 };
 
 // =====================

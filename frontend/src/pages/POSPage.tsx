@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Input, Tabs, Card, Button, Typography, Divider, InputNumber, Select, Modal, message, Empty, Tag, Badge } from 'antd';
-import { SearchOutlined, ShoppingCartOutlined, DeleteOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import type { Product, Category, PaymentMethod } from '../types';
+import { SearchOutlined, ShoppingCartOutlined, DeleteOutlined, CheckCircleOutlined, PrinterOutlined } from '@ant-design/icons';
+import type { Product, Category, PaymentMethod, Order } from '../types';
 import { productApi, categoryApi, orderApi } from '../api';
 import { useCartStore } from '../store/cartStore';
+import ReceiptModal from '../components/Receipt/ReceiptModal';
 
 const { Text, Title } = Typography;
 
@@ -23,6 +24,7 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [successModal, setSuccessModal] = useState<{ visible: boolean; orderNumber: string; total: number }>({ visible: false, orderNumber: '', total: 0 });
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
 
   const { items, addItem, removeItem, updateQuantity, setDiscount, discount, clearCart, subtotal, total } = useCartStore();
 
@@ -51,6 +53,7 @@ export default function POSPage() {
       const res = await orderApi.checkout(items, paymentMethod, discount);
       const order = res.data;
       setSuccessModal({ visible: true, orderNumber: order.orderNumber, total: order.total });
+      setReceiptOrder(order);
       clearCart();
       // 重新載入商品以更新庫存
       const prodRes = await productApi.getAll();
@@ -234,11 +237,22 @@ export default function POSPage() {
           <div style={{ marginTop: 8 }}>
             <Title level={2} style={{ color: '#1890ff' }}>${successModal.total}</Title>
           </div>
-          <Button type="primary" size="large" onClick={() => setSuccessModal({ ...successModal, visible: false })} style={{ marginTop: 8 }}>
-            繼續銷售
-          </Button>
+          <Space style={{ marginTop: 8 }}>
+            <Button size="large" icon={<PrinterOutlined />} onClick={() => setSuccessModal({ ...successModal, visible: false })}>
+              列印收據
+            </Button>
+            <Button type="primary" size="large" onClick={() => { setSuccessModal({ ...successModal, visible: false }); setReceiptOrder(null); }}>
+              繼續銷售
+            </Button>
+          </Space>
         </div>
       </Modal>
+
+      <ReceiptModal
+        order={receiptOrder}
+        open={!!receiptOrder && !successModal.visible}
+        onClose={() => setReceiptOrder(null)}
+      />
     </Row>
   );
 }

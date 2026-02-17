@@ -8,23 +8,31 @@ import {
   UserOutlined,
   LogoutOutlined,
   WarningOutlined,
+  FileTextOutlined,
+  TagsOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../../store/authStore';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-const menuItems = [
-  { key: '/pos', icon: <ShoppingCartOutlined />, label: 'POS 收銀' },
-  { key: '/products', icon: <AppstoreOutlined />, label: '商品管理' },
-  { key: '/inventory', icon: <InboxOutlined />, label: '庫存管理' },
-  { key: '/reports', icon: <BarChartOutlined />, label: '報表統計' },
-];
-
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+
+  const menuItems = [
+    { key: '/pos',        icon: <ShoppingCartOutlined />, label: 'POS 收銀' },
+    { key: '/orders',     icon: <FileTextOutlined />,     label: '訂單管理' },
+    { key: '/products',   icon: <AppstoreOutlined />,     label: '商品管理' },
+    { key: '/categories', icon: <TagsOutlined />,         label: '分類管理' },
+    { key: '/inventory',  icon: <InboxOutlined />,        label: '庫存管理' },
+    { key: '/reports',    icon: <BarChartOutlined />,     label: '報表統計' },
+    ...(user?.role === 'ADMIN'
+      ? [{ key: '/users', icon: <TeamOutlined />, label: '使用者管理' }]
+      : []),
+  ];
 
   const userMenu = {
     items: [

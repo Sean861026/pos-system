@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import prisma from '../config/database';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -150,6 +150,54 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response): Promise<
   });
 
   res.status(201).json(order);
+});
+
+// POST /api/orders/:id/refund - 退款
+router.post('/:id/refund', authenticate, requireRole('ADMIN', 'MANAGER'), async (req, res: Response): Promise<void> => {
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: { items: true },
+  });
+
+  if (!order) {
+    res.status(404).json({ message: '訂單不存在' });
+    return;
+  }
+
+  if (order.status !== 'COMPLETED') {
+    res.status(400).json({ message: `此訂單狀態為 ${order.status}，無法退款` });
+    return;
+  }
+
+  // 退款並還原庫存（Transaction）
+  const refunded = await prisma.$transaction(async (tx) => {
+    const updated = await tx.order.update({
+      where: { id: order.id },
+      data: { status: 'REFUNDED' },
+      include: { items: { include: { product: true } }, cashier: { select: { name: true } } },
+    });
+
+    // 還原庫存
+    for (const item of order.items) {
+      await tx.inventory.update({
+        where: { productId: item.productId },
+        data: {
+          quantity: { increment: item.quantity },
+          movements: {
+            create: {
+              type: 'RETURN',
+              quantity: item.quantity,
+              note: `退款 ${order.orderNumber}`,
+            },
+          },
+        },
+      });
+    }
+
+    return updated;
+  });
+
+  res.json(refunded);
 });
 
 export default router;

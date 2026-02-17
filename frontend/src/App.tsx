@@ -5,8 +5,11 @@ import MainLayout from './components/Layout/MainLayout';
 import LoginPage from './pages/LoginPage';
 import POSPage from './pages/POSPage';
 import ProductsPage from './pages/ProductsPage';
+import CategoriesPage from './pages/CategoriesPage';
 import InventoryPage from './pages/InventoryPage';
+import OrdersPage from './pages/OrdersPage';
 import ReportsPage from './pages/ReportsPage';
+import UsersPage from './pages/UsersPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -34,9 +37,12 @@ export default function App() {
         >
           <Route index element={<Navigate to="/pos" replace />} />
           <Route path="pos" element={<POSPage />} />
+          <Route path="orders" element={<OrdersPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
