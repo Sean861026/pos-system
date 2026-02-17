@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Input, Tabs, Card, Button, Typography, Divider, InputNumber, Select, Modal, message, Empty, Tag, Badge } from 'antd';
+import { Row, Col, Input, Tabs, Card, Button, Typography, Divider, InputNumber, Select, Modal, message, Empty, Tag, Badge, Space } from 'antd';
 import { SearchOutlined, ShoppingCartOutlined, DeleteOutlined, CheckCircleOutlined, PrinterOutlined } from '@ant-design/icons';
 import type { Product, Category, PaymentMethod, Order } from '../types';
 import { productApi, categoryApi, orderApi } from '../api';
