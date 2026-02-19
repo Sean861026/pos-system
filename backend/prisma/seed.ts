@@ -20,6 +20,34 @@ async function main() {
   });
   console.log('已建立管理員帳號:', admin.email);
 
+  // 建立經理帳號
+  const managerPassword = await bcrypt.hash('manager123', 10);
+  const manager = await prisma.user.upsert({
+    where: { email: 'manager@pos.com' },
+    update: {},
+    create: {
+      name: '門市經理',
+      email: 'manager@pos.com',
+      password: managerPassword,
+      role: UserRole.MANAGER,
+    },
+  });
+  console.log('已建立經理帳號:', manager.email);
+
+  // 建立收銀員帳號
+  const cashierPassword = await bcrypt.hash('cashier123', 10);
+  const cashier = await prisma.user.upsert({
+    where: { email: 'cashier@pos.com' },
+    update: {},
+    create: {
+      name: '收銀員',
+      email: 'cashier@pos.com',
+      password: cashierPassword,
+      role: UserRole.CASHIER,
+    },
+  });
+  console.log('已建立收銀員帳號:', cashier.email);
+
   // 建立商品分類
   const categories = await Promise.all([
     prisma.category.upsert({
